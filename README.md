@@ -105,7 +105,7 @@ Distribué sous la licence MIT. Voir `LICENSE` pour plus d'informations.
 
 ## 👥 Auteur
 
-[Votre Nom](https://github.com/votre-username)
+[Filox(https://github.com/Filox77250)
 
 ---
 
