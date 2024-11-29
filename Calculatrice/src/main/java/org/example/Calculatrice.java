@@ -13,12 +13,11 @@ public class Calculatrice extends JFrame {
     private boolean debut = true;
     private boolean modeScientifique = false;
     private DecimalFormat df = new DecimalFormat("#.##########");
-
+    private double memoryValue = 0;
 
     private static final int LARGEUR_BASE = 300;
-    private static final int HAUTEUR_BASE = 400;
-    private static final int LARGEUR_SCIENTIFIQUE = 600;
-
+    private static final int LARGEUR_SCIENTIFIQUE = 500;
+private static final int HAUTEUR_BASE = 500;
 
     private static final Color COULEUR_FOND = new Color(32, 32, 32);
     private static final Color COULEUR_BOUTONS = new Color(45, 45, 45);
@@ -33,13 +32,13 @@ public class Calculatrice extends JFrame {
         super("Brclacular");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         initialiserUI();
+        ajouterSupportPaveNumerique();
     }
 
     private void initialiserUI() {
         mainPanel = new JPanel(new BorderLayout(5, 5));
         mainPanel.setBackground(COULEUR_FOND);
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
 
         JMenuBar menuBar = new JMenuBar();
         menuBar.setBackground(COULEUR_FOND);
@@ -50,7 +49,6 @@ public class Calculatrice extends JFrame {
         viewMenu.add(toggleView);
         menuBar.add(viewMenu);
         setJMenuBar(menuBar);
-
 
         ecran = new JTextField("0");
         ecran.setEditable(false);
@@ -64,7 +62,6 @@ public class Calculatrice extends JFrame {
         ));
         mainPanel.add(ecran, BorderLayout.NORTH);
 
-
         boutonsPanel = new JPanel(new GridLayout(6, 4, 2, 2));
         boutonsPanel.setBackground(COULEUR_FOND);
         boutonsPanel.setBorder(new EmptyBorder(2, 2, 2, 2));
@@ -77,6 +74,53 @@ public class Calculatrice extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
     }
+
+    private void ajouterSupportPaveNumerique() {
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                switch (e.getKeyCode()) {
+                    case KeyEvent.VK_NUMPAD0 -> traiterTouche("0");
+                    case KeyEvent.VK_NUMPAD1 -> traiterTouche("1");
+                    case KeyEvent.VK_NUMPAD2 -> traiterTouche("2");
+                    case KeyEvent.VK_NUMPAD3 -> traiterTouche("3");
+                    case KeyEvent.VK_NUMPAD4 -> traiterTouche("4");
+                    case KeyEvent.VK_NUMPAD5 -> traiterTouche("5");
+                    case KeyEvent.VK_NUMPAD6 -> traiterTouche("6");
+                    case KeyEvent.VK_NUMPAD7 -> traiterTouche("7");
+                    case KeyEvent.VK_NUMPAD8 -> traiterTouche("8");
+                    case KeyEvent.VK_NUMPAD9 -> traiterTouche("9");
+                    case KeyEvent.VK_DECIMAL -> traiterTouche(".");
+                    
+                    case KeyEvent.VK_ADD -> traiterTouche("+");
+                    case KeyEvent.VK_SUBTRACT -> traiterTouche("-");
+                    case KeyEvent.VK_MULTIPLY -> traiterTouche("×");
+                    case KeyEvent.VK_DIVIDE -> traiterTouche("÷");
+                    case KeyEvent.VK_ENTER -> traiterTouche("=");
+                    
+                    case KeyEvent.VK_BACK_SPACE -> traiterTouche("⌫");
+                    case KeyEvent.VK_ESCAPE -> traiterTouche("C");
+                    case KeyEvent.VK_DELETE -> traiterTouche("CE");
+                }
+                
+                char key = e.getKeyChar();
+                if (Character.isDigit(key)) {
+                    traiterTouche(String.valueOf(key));
+                }
+            }
+        });
+        
+        setFocusable(true);
+        requestFocus();
+        
+        addWindowFocusListener(new WindowAdapter() {
+            @Override
+            public void windowGainedFocus(WindowEvent e) {
+                requestFocus();
+            }
+        });
+    }
+
     private void ajouterBoutonsStandard() {
         boutonsPanel.removeAll();
         boutonsPanel.setLayout(new GridLayout(6, 4, 2, 2));
@@ -98,17 +142,18 @@ public class Calculatrice extends JFrame {
 
     private void ajouterBoutonsScientifique() {
         boutonsPanel.removeAll();
-        boutonsPanel.setLayout(new GridLayout(8, 6, 2, 2));
-
+        boutonsPanel.setLayout(new GridLayout(7, 5, 2, 2)); 
+    
         String[] boutonsScientifique = {
-                "%", "CE", "C", "⌫", "MC", "MR",
-                "1/x", "x²", "√", "÷", "M+", "M-",
-                "7", "8", "9", "×", "MS", "M▾",
-                "4", "5", "6", "-", "sin", "cos",
-                "1", "2", "3", "+", "tan", "log",
-                "±", "0", ".", "=", "exp", "ln"
+                "MC", "MR", "M+", "M-", "MS",     
+                "%", "CE", "C", "⌫", "÷",      
+                "x²", "√", "7", "8", "9",         
+                "sin", "cos", "4", "5", "6",     
+                "tan", "log", "1", "2", "3",    
+                "ln", "exp", "0", ".", "±",       
+                "1/x", "(", ")", "×", "="       
         };
-
+    
         for (String texte : boutonsScientifique) {
             JButton bouton = creerBouton(texte);
             boutonsPanel.add(bouton);
@@ -123,7 +168,6 @@ public class Calculatrice extends JFrame {
         bouton.setBorderPainted(false);
         bouton.setOpaque(true);
 
-
         if (texte.matches("[0-9.]")) {
             bouton.setBackground(COULEUR_BOUTONS);
         } else if (texte.matches("[÷×\\-+=]")) {
@@ -131,7 +175,6 @@ public class Calculatrice extends JFrame {
         } else {
             bouton.setBackground(COULEUR_SCIENTIFIQUE);
         }
-
 
         bouton.addMouseListener(new MouseAdapter() {
             @Override
@@ -159,6 +202,20 @@ public class Calculatrice extends JFrame {
         return bouton;
     }
 
+    private void handleMemoryOperation(String operation) {
+        try {
+            switch (operation) {
+                case "MC" -> memoryValue = 0;
+                case "MR" -> setResultat(memoryValue);
+                case "M+" -> memoryValue += Double.parseDouble(ecran.getText());
+                case "M-" -> memoryValue -= Double.parseDouble(ecran.getText());
+                case "MS" -> memoryValue = Double.parseDouble(ecran.getText());
+            }
+        } catch (Exception e) {
+            ecran.setText("Erreur");
+        }
+    }
+
     private void basculerMode() {
         modeScientifique = !modeScientifique;
         if (modeScientifique) {
@@ -173,6 +230,7 @@ public class Calculatrice extends JFrame {
         revalidate();
         repaint();
     }
+
     private void traiterTouche(String touche) {
         try {
             if (touche.matches("[0-9.]")) {
@@ -256,6 +314,7 @@ public class Calculatrice extends JFrame {
                         double val = Double.parseDouble(ecran.getText());
                         setResultat(Math.exp(val));
                     }
+                    case "MC", "MR", "M+", "M-", "MS" -> handleMemoryOperation(touche);
                     default -> {
                         if (touche.matches("[÷×\\-+]")) {
                             nombre1 = Double.parseDouble(ecran.getText());
@@ -304,22 +363,31 @@ public class Calculatrice extends JFrame {
     }
 
     private void setResultat(double resultat) {
-        if (Double.isInfinite(resultat)) {
-            ecran.setText("Infini");
-        } else if (Double.isNaN(resultat)) {
-            ecran.setText("Indéfini");
-        } else {
-            ecran.setText(df.format(resultat));
+        try {
+            if (Double.isInfinite(resultat)) {
+                ecran.setText("Infini");
+            } else if (Double.isNaN(resultat)) {
+                ecran.setText("Indéfini");
+            } else {
+                String formattedResult = df.format(resultat);
+                if (formattedResult.length() > 15) {
+                    ecran.setText("Dépassement");
+                } else {
+                    ecran.setText(formattedResult);
+                }
+            }
+        } catch (Exception e) {
+            ecran.setText("Erreur");
         }
         debut = true;
     }
 
     public static void main(String[] args) {
         try {
-
+            
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-
+      
             UIManager.put("Button.arc", 0);
             UIManager.put("TextField.arc", 0);
 
@@ -331,4 +399,4 @@ public class Calculatrice extends JFrame {
             e.printStackTrace();
         }
     }
-}
+}   
